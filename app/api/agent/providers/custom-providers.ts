@@ -1,10 +1,35 @@
+/**
+ * Custom action providers for the AgentKit agent, implementing analytics and market data capabilities.
+ * This file contains implementations for token analysis, wallet activity tracking, risk assessment, and crypto news aggregation.
+ * 
+ * Key Features:
+ * - Token price analysis with market metrics
+ * - Wallet activity tracking and analytics
+ * - Token risk assessment and fraud detection
+ * - Real-time crypto news aggregation
+ * 
+ * Dependencies:
+ * - @coinbase/agentkit
+ * - @solana/web3.js
+ * - node-fetch
+ * - zod
+ */
+
 import { ActionProvider, Action, WalletProvider } from "@coinbase/agentkit";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import fetch from "node-fetch";
 import { z } from "zod";
 
-// Initialize Solana connection with Alchemy RPC
+/**
+ * @constant {string} ALCHEMY_API_KEY
+ * @description API key for Alchemy RPC endpoint. Falls back to placeholder if not set in environment.
+ */
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || "YOUR-ALCHEMY-API-KEY";
+
+/**
+ * @constant {Connection} connection
+ * @description Solana connection instance using Alchemy RPC endpoint
+ */
 const connection = new Connection(
   `https://solana-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
   "confirmed"
@@ -35,22 +60,30 @@ async function getTokenBalance(walletAddress: string) {
   }
 }
 
+/**
+ * @interface CoinGeckoToken
+ * @description Represents a token's basic information from CoinGecko API
+ */
 interface CoinGeckoToken {
-  id: string;
-  symbol: string;
-  name: string;
+  id: string;      // Unique identifier (e.g., "bitcoin")
+  symbol: string;  // Token symbol (e.g., "btc")
+  name: string;    // Full name (e.g., "Bitcoin")
 }
 
+/**
+ * @interface CoinGeckoApiResponse
+ * @description Represents detailed price and market data from CoinGecko API
+ */
 interface CoinGeckoApiResponse {
   [key: string]: {
-    usd: number;
-    usd_24h_change: number;
-    usd_24h_vol: number;
-    usd_market_cap: number;
-    usd_1h_change: number;
-    usd_7d_change: number;
-    usd_14d_change: number;
-    usd_30d_change: number;
+    usd: number;               // Current USD price
+    usd_24h_change: number;    // 24-hour price change percentage
+    usd_24h_vol: number;       // 24-hour trading volume
+    usd_market_cap: number;    // Market capitalization
+    usd_1h_change: number;     // 1-hour price change percentage
+    usd_7d_change: number;     // 7-day price change percentage
+    usd_14d_change: number;    // 14-day price change percentage
+    usd_30d_change: number;    // 30-day price change percentage
   };
 }
 
@@ -208,14 +241,17 @@ async function getRecentTransactions(walletAddress: string, limit: number = 10) 
   }
 }
 
-// Add new interfaces for token risk analysis
+/**
+ * @interface TokenRiskMetrics
+ * @description Comprehensive risk assessment metrics for a token
+ */
 interface TokenRiskMetrics {
-  liquidityScore: number;
-  holderConcentrationScore: number;
-  transactionPatternScore: number;
-  contractRiskScore: number;
-  overallRiskScore: number;
-  riskFactors: string[];
+  liquidityScore: number;          // Score based on liquidity metrics (0-100)
+  holderConcentrationScore: number; // Score based on holder distribution (0-100)
+  transactionPatternScore: number;  // Score based on transaction patterns (0-100)
+  contractRiskScore: number;       // Score based on contract characteristics (0-100)
+  overallRiskScore: number;        // Weighted average of all risk scores (0-100)
+  riskFactors: string[];           // List of identified risk factors
 }
 
 interface TokenHolder {
@@ -666,11 +702,58 @@ async function getAllNews(): Promise<NewsResponse> {
   }
 }
 
-// Action definitions
+/**
+ * Creates an analytics action provider for AgentKit
+ * 
+ * This provider implements several key actions:
+ * 1. get-token-price-with-sentiment: Detailed token price analysis
+ * 2. get-address-activity: Wallet activity tracking
+ * 3. potential-rugpull-and-fraud-token-analysis: Token risk assessment
+ * 4. get-latest-crypto-news: Real-time crypto news aggregation
+ * 
+ * Example usage:
+ * ```typescript
+ * // In prepare-agentkit.ts
+ * const actionProviders = [
+ *   onchainAssistantActionProvider(),
+ *   // ... other providers
+ * ];
+ * ```
+ */
+export function onchainAssistantActionProvider(): ActionProvider<WalletProvider> {
+  return {
+    name: "onchain-assistant",
+    actionProviders: [],
+    supportsNetwork: () => true,
+    getActions: () => actions
+  };
+}
+
+/**
+ * Available onchain assistant actions for the agent
+ * 
+ * Each action is defined with:
+ * - name: Unique identifier for the action
+ * - description: Human-readable description of the action's purpose
+ * - schema: Zod schema defining the action's parameters
+ * - invoke: Async function implementing the action's logic
+ */
 const actions: Action<any>[] = [
   {
+    /**
+     * Retrieves detailed price data and market analysis for a token
+     * 
+     * Features:
+     * - Current price and market metrics
+     * - Price changes across multiple timeframes
+     * - Market volume and capitalization
+     * - Sentiment analysis based on price movements
+     * 
+     * @param params.tokenId - Token identifier (ID, symbol, or name)
+     * @returns JSON string containing token analysis
+     */
     name: "get-token-price-with-sentiment",
-    description: "Get detailed price data and market analysis for a token. The analysis will consider price changes across multiple timeframes (1h, 24h, 7d, 14d, 30d) and market metrics to provide insights about the token's performance.",
+    description: "Get detailed price data and market analysis for a token...",
     schema: tokenPriceSchema,
     invoke: async (params: { tokenId: string }): Promise<string> => {
       try {
@@ -682,8 +765,21 @@ const actions: Action<any>[] = [
     }
   },
   {
+    /**
+     * Analyzes a Solana wallet address for recent activity
+     * 
+     * Features:
+     * - Current wallet balance
+     * - Transaction history and types
+     * - Activity patterns and trends
+     * - Time-based filtering
+     * 
+     * @param params.walletAddress - Solana wallet address to analyze
+     * @param params.timeRange - Time range for analysis (24h, 7d, 30d)
+     * @returns JSON string containing wallet analysis
+     */
     name: "get-address-activity",
-    description: "Analyze a Solana wallet address for recent activity and transactions",
+    description: "Analyze a Solana wallet address for recent activity...",
     schema: addressActivitySchema,
     invoke: async (params: { walletAddress: string; timeRange?: "24h" | "7d" | "30d" }): Promise<string> => {
       try {
@@ -731,8 +827,28 @@ const actions: Action<any>[] = [
     }
   },
   {
+    /**
+     * Comprehensive token risk assessment
+     * 
+     * Features:
+     * - Holder concentration analysis
+     * - Transaction pattern analysis
+     * - Liquidity assessment
+     * - Contract risk evaluation
+     * - Overall risk scoring
+     * 
+     * Risk Factors Analyzed:
+     * - Holder concentration
+     * - Transaction patterns
+     * - Liquidity metrics
+     * - Contract characteristics
+     * - Market manipulation indicators
+     * 
+     * @param params.tokenAddress - Solana token address to analyze
+     * @returns JSON string containing risk analysis
+     */
     name: "potential-rugpull-and-fraud-token-analysis",
-    description: "Analyze a Solana token for potential fraud or rugpull risk by examining holder concentration, transaction patterns, and liquidity metrics",
+    description: "Analyze a Solana token for potential fraud or rugpull risk...",
     schema: tokenRiskAnalysisSchema,
     invoke: async (params: { tokenAddress: string }): Promise<string> => {
       try {
@@ -809,8 +925,26 @@ Please verify the token address and try again.`);
     }
   },
   {
+    /**
+     * Aggregates real-time cryptocurrency and web3 news
+     * 
+     * Features:
+     * - News from multiple sources
+     * - Category filtering
+     * - Sentiment analysis
+     * - Trending topics
+     * - Caching for performance
+     * 
+     * Sources:
+     * - CryptoCompare API
+     * - News API
+     * 
+     * @param params.category - News category filter
+     * @param params.limit - Maximum number of articles
+     * @returns JSON string containing news data
+     */
     name: "get-latest-crypto-news",
-    description: "Get the latest cryptocurrency and web3 news, including trending topics and sentiment analysis",
+    description: "Get the latest cryptocurrency and web3 news...",
     schema: cryptoNewsSchema,
     invoke: async (params: { category?: 'all' | 'defi' | 'nft' | 'web3' | 'trading', limit?: number }): Promise<string> => {
       try {
@@ -852,14 +986,4 @@ Please verify the token address and try again.`);
       }
     }
   }
-];
-
-// Export the action provider
-export function analyticsActionProvider(): ActionProvider<WalletProvider> {
-  return {
-    name: "analytics-provider",
-    actionProviders: [],
-    supportsNetwork: () => true,
-    getActions: () => actions
-  };
-} 
+]; 

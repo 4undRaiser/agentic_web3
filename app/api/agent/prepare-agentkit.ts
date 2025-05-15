@@ -12,7 +12,7 @@ import {
 import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
 import fs from "fs";
-import { analyticsActionProvider } from "./providers/custom-providers";
+import { onchainAssistantActionProvider } from "./providers/custom-providers";
 
 /**
  * AgentKit Integration Route
@@ -94,7 +94,7 @@ export async function prepareAgentkitAndWalletProvider(): Promise<{
       walletActionProvider(),
       splActionProvider(),
       jupiterActionProvider(),
-      analyticsActionProvider(),
+      onchainAssistantActionProvider(),
     ];
     const canUseCdpApi = process.env.CDP_API_KEY_NAME && process.env.CDP_API_KEY_PRIVATE_KEY;
     if (canUseCdpApi) {

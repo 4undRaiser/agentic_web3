@@ -1,42 +1,34 @@
-# Agentic Web3 - Solana AI Assistant
+# Agentic Web3
 
-An AI-powered assistant that helps users interact with the Solana blockchain through natural language. Built with Next.js and AgentKit, this project enables seamless Solana interactions using conversational AI, supporting token transfers, Jupiter swaps, and more.
+## Description
 
-## 🚀 Features
+Agentic Web3 is a decentralized AI agent platform that provides on-chain assistant to users. The ai agent can handle everything from basic web3 tasks to complex on-chain operations, making decentralization more accessible to users of all experience levels.
 
-- 🤖 **AI-Powered Solana Interactions**: Natural language interface for Solana blockchain operations
-- 💰 **Token Management**: Send and receive SPL tokens
-- 🔄 **Jupiter Integration**: Execute token swaps through Jupiter aggregator
-- 📊 **Analytics**: Track and analyze blockchain activities
-- 🔒 **Secure Wallet Management**: Solana keypair-based wallet integration
-- 🛠️ **Extensible Architecture**: Custom action providers for specific use cases
+## Capabilities
 
-## 🛠️ Tech Stack
+📊 Token Price Analysis & Market Metrics
+📈 Wallet Activity Tracking & Analytics
+⚠️ Risk Assessment & Fraud Detection
+📰 Real-time Crypto News & Insights
+📊 On-Chain Data Analysis
+👛 Wallet Integration & Management
+💱 DeFi Operations & Token Swaps
+🪙 Token Management & Deployment
 
-- [Next.js 14](https://nextjs.org) - React framework for production
-- [AgentKit](https://github.com/coinbase/agentkit) - AI agent framework for blockchain
-- [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/) - Solana blockchain interaction
-- [Jupiter SDK](https://docs.jup.ag) - Solana DEX aggregator
-- [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS framework
-- [TypeScript](https://www.typescriptlang.org) - Type-safe JavaScript
-- [LangChain](https://js.langchain.com) - LLM application framework
-- [Vercel AI SDK](https://sdk.vercel.ai/docs) - AI streaming and chat UI
+## Prerequisites
 
-## 🏁 Getting Started
-
-### Prerequisites
+Before you begin, ensure you have:
 
 - Node.js (v16 or higher)
 - npm or yarn
-- Solana CLI tools (optional, for local development)
-- OpenAI API key
+- A modern web browser
 
-### Installation
+## Installation
 
 1. Clone the repository:
 
 ```sh
-git clone https://github.com/yourusername/agentic_web3.git
+git clone <https://github.com/4undRaiser/agentic_web3>
 cd agentic_web3
 ```
 
@@ -49,131 +41,114 @@ npm install
 3. Set up environment variables:
 
 ```sh
+# Copy the example env file
 cp .env.example .env.local
+
+# Edit .env.local with your configuration
+# Required variables:
+# Required
+# - OPENAI_API_KEY=your openai api key
+# - SOLANA_PRIVATE_KEY=your solana wallet private key
+# - ALCHEMY_API_KEY=your alchemy api key
+# - CRYPTOCOMPARE_API_KEY=your cryptocompare api key
+# - NEWS_API_KEY=your news api key
+
+# Optional
+# NETWORK_ID=solana-mainnet
+# SOLANA_RPC_URL=
+# CDP_API_KEY_NAME=
+# CDP_API_KEY_PRIVATE_KEY=
 ```
 
-Required environment variables:
+## Running the Project
 
-- `OPENAI_API_KEY`: Your OpenAI API key
-- `SOLANA_PRIVATE_KEY`: Your Solana wallet private key (base58 encoded)
-- `SOLANA_RPC_URL`: (Optional) Custom RPC URL for Solana
-- `NETWORK_ID`: (Optional) Solana network ID (default: "solana-devnet")
-- `CDP_API_KEY_NAME`: (Optional) For CDP API access
-- `CDP_API_KEY_PRIVATE_KEY`: (Optional) For CDP API access
-
-4. Start the development server:
+1. Start the development server:
 
 ```sh
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+2. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## ⚙️ Configuration
+## Usage
 
-### Agent Capabilities
+1. **Starting a Chat**:
 
-The agent is configured with the following action providers:
+   - Connect your wallet using the wallet button in the top-right corner
+   - Click on launch chat in the top nav bar
+   - Type your message in the input field at the bottom
+   - Press enter or click the send button to send your message
 
-- **Wallet Actions**: View balances, send transactions
-- **SPL Token Actions**: Token transfers and management
-- **Jupiter Actions**: Token swaps and price quotes
-- **Analytics Actions**: Track and analyze blockchain activities
-- **CDP API Actions**: (Optional) Additional Coinbase CDP capabilities
+2. **Managing Chats**:
 
-### Agent Customization
+   - Use the sidebar to view your chat history
+   - Click on any previous chat to load it
+   - Delete chats using the trash icon
+   - Collapse/expand the sidebar using the toggle button
 
-The agent can be configured in:
+3. **Message Limits**:
 
-- `/app/api/agent/prepare-agentkit.ts` - Agent and wallet configuration
-- `/app/api/agent/create-agent.ts` - Agent instantiation and LLM setup
-- `/app/api/agent/providers/` - Custom action providers
+   - Each user has a daily message limit (default: 20 messages)
+   - The remaining message count is displayed above the input field
+   - Limits reset at midnight local time
 
-## 📚 Available Actions
+4. **Blockchain Interactions**:
+   - The agent can help you with various blockchain operations
+   - Ensure your wallet is initialized in the .env file for blockchain interactions
+   - The agent will guide you through any required confirmations
 
-The agent can perform various Solana operations:
-
-- View wallet balances and token holdings
-- Send SOL and SPL tokens
-- Execute token swaps through Jupiter
-- Query blockchain data and analytics
-- Interact with custom smart contracts
-- Track transaction history
-
-## 🏗️ Project Structure
+## Project Structure
 
 ```
-app/
-├── api/
-│   └── agent/           # Agent implementation
-│       ├── providers/   # Custom action providers
-│       ├── prepare-agentkit.ts
-│       └── create-agent.ts
-├── components/          # React components
-├── chat/               # Chat interface
-├── hooks/              # Custom React hooks
-└── types/              # TypeScript definitions
+agentic_web3/
+├── app/
+│   ├── api/           # API routes and agent configuration
+│   ├── chat/          # Chat interface components
+│   ├── components/    # Reusable UI components
+│   └── hooks/         # Custom React hooks
+├── public/            # Static assets
+└── ...config files
 ```
 
-## 📚 Documentation
+## Configuration
 
-- [AgentKit Documentation](https://docs.cdp.coinbase.com/agentkit/docs/welcome)
-- [Solana Documentation](https://docs.solana.com)
-- [Jupiter Documentation](https://docs.jup.ag)
-- [Next.js Documentation](https://nextjs.org/docs)
+### Agent Configuration
 
-## 🤝 Contributing
+The agent's behavior can be customized in:
 
-We welcome contributions! Please see our [Contributing Guide](https://github.com/coinbase/agentkit/blob/main/CONTRIBUTING.md) for details.
+- `/api/agent/prepare-agentkit.ts`: AgentKit configuration
+- `/api/agent/create-agent.ts`: Agent instantiation
 
-## 📞 Support
+Key configuration options:
 
-- Join our [Discord Community](https://discord.gg/CDP)
-- Open an issue in the repository
-- Check the [AgentKit Documentation](https://docs.cdp.coinbase.com/agentkit/docs/welcome)
+1. **LLM Selection**: Choose your preferred OpenAI model
+2. **Wallet Provider**: Configure blockchain wallet integration
+3. **Action Providers**: Define what actions the agent can perform
 
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Configuring Your Agent
-
-You can [modify your configuration](https://github.com/coinbase/agentkit/tree/main/typescript/agentkit#usage) of the agent. By default, your agentkit configuration occurs in the `/api/agent/prepare-agentkit.ts` file, and agent instantiation occurs in the `/api/agent/create-agent.ts` file.
-
-### 1. Select Your LLM
-
-Modify the OpenAI model instantiation to use the model of your choice.
-
-### 2. Select Your Wallet Provider
-
-AgentKit requires a **Wallet Provider** to interact with blockchain networks.
-
-### 3. Select Your Action Providers
-
-Action Providers define what your agent can do. You can use built-in providers or create your own.
-
----
-
-## Next Steps
-
-- Explore the AgentKit README: [AgentKit Documentation](https://github.com/coinbase/agentkit)
-- Learn more about available Wallet Providers & Action Providers.
-- Experiment with custom Action Providers for your specific use case.
-
----
-
-## Learn More
-
-- [Learn more about CDP](https://docs.cdp.coinbase.com/)
-- [Learn more about AgentKit](https://docs.cdp.coinbase.com/agentkit/docs/welcome)
-- [Learn more about Next.js](https://nextjs.org/docs)
-- [Learn more about Tailwind CSS](https://tailwindcss.com/docs)
-
----
+```
 
 ## Contributing
 
-Interested in contributing to AgentKit? Follow the contribution guide:
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-- [Contribution Guide](https://github.com/coinbase/agentkit/blob/main/CONTRIBUTING.md)
-- Join the discussion on [Discord](https://discord.gg/CDP)
+## Resources
+
+- [AgentKit Documentation](https://github.com/coinbase/agentkit)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [Coinbase Developer Platform](https://docs.cdp.coinbase.com/)
+
+## Support
+
+- Join the [Discord community](https://discord.gg/CDP)
+- Open an issue in the repository
+- Check the [AgentKit documentation](https://docs.cdp.coinbase.com/agentkit/docs/welcome)
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+```
