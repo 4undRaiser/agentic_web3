@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 import { ArrowPathIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useAgent } from "@/app/hooks/useAgent";
@@ -12,6 +12,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  id?: string;
 }
 
 interface ChatHistory {
@@ -22,7 +23,7 @@ interface ChatHistory {
   messages: Message[];
 }
 
-const MESSAGE_LIMIT = 40;
+const MESSAGE_LIMIT = 400;
 
 const getDailyMessageCount = () => {
   const today = new Date().toDateString();
@@ -65,12 +66,20 @@ export default function ChatPage() {
   const lastScrollTime = useRef<number>(0);
   const scrollTimeout = useRef<NodeJS.Timeout>();
 
-  // Convert agent messages to our Message format
-  const messages: Message[] = agentMessages.map(msg => ({
-    role: msg.sender === 'user' ? 'user' : 'assistant',
+  // Memoize the messages array to prevent unnecessary re-renders with proper typing
+  const messages = useMemo<Message[]>(() => agentMessages.map(msg => ({
+    role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
     content: msg.text,
-    timestamp: new Date().toISOString() // Keep timestamp for sorting but don't display it
-  }));
+    timestamp: new Date().toISOString(),
+    id: `${msg.sender}-${msg.text}-${Date.now()}`
+  })), [agentMessages]);
+
+  // Add a function to create a new chat
+  const createNewChat = useCallback(() => {
+    setCurrentChatId(undefined);
+    setDisplayedMessages([]);
+    resetMessages?.();
+  }, [resetMessages]);
 
   // Load chat histories from localStorage on mount
   useEffect(() => {
@@ -89,43 +98,59 @@ export default function ChatPage() {
         }
       }
     }
-  }, []);
+  }, []); // Empty dependency array since this should only run once on mount
 
-  // Update displayed messages when agent messages change
+  // Update displayed messages and chat history when agent messages change
   useEffect(() => {
-    if (messages.length > 0) {
-      setDisplayedMessages(messages);
-    }
-  }, [messages]);
+    if (messages.length === 0) return; // Skip if no messages
 
-  // Create new chat when messages change and no current chat
-  useEffect(() => {
-    if (messages.length > 0 && !currentChatId) {
+    // Get the latest message
+    const latestMessage = messages[messages.length - 1];
+    
+    // Check if the message is already in displayed messages
+    const isDuplicate = displayedMessages.some(msg => 
+      msg.content === latestMessage.content && 
+      msg.role === latestMessage.role &&
+      Math.abs(new Date(msg.timestamp).getTime() - new Date(latestMessage.timestamp).getTime()) < 1000
+    );
+
+    if (isDuplicate) return; // Skip if this is a duplicate message
+
+    // Update displayed messages by appending only the latest message
+    setDisplayedMessages(prev => {
+      // If this is a new chat and it's the first message, start fresh
+      if (!currentChatId && prev.length === 0) {
+        return [latestMessage];
+      }
+      // Otherwise, append the latest message
+      return [...prev, latestMessage];
+    });
+
+    // Handle chat creation or update
+    if (!currentChatId) {
+      // Create new chat if none exists
       const newChat: ChatHistory = {
         id: Date.now().toString(),
-        title: messages[0].content.slice(0, 30) + '...',
+        title: latestMessage.content.slice(0, 30) + '...',
         timestamp: new Date().toISOString(),
-        preview: messages[0].content,
-        messages: [...messages]
+        preview: latestMessage.content,
+        messages: [latestMessage] // Only use the latest message for new chats
       };
       setChatHistories(prev => [newChat, ...prev]);
       setCurrentChatId(newChat.id);
+    } else {
+      // Update existing chat by appending the latest message
+      setChatHistories(prev => prev.map(chat => 
+        chat.id === currentChatId 
+          ? { 
+              ...chat, 
+              messages: [...chat.messages, latestMessage],
+              preview: latestMessage.content // Update preview with latest message
+            }
+          : chat
+      ));
     }
-  }, [messages, currentChatId]);
-
-  // Update chat history when messages change in current chat
-  useEffect(() => {
-    if (currentChatId && messages.length > 0) {
-      const currentChat = chatHistories.find(chat => chat.id === currentChatId);
-      if (currentChat && currentChat.messages.length === 0) {
-        setChatHistories(prev => prev.map(chat => 
-          chat.id === currentChatId 
-            ? { ...chat, messages: [...messages] }
-            : chat
-        ));
-      }
-    }
-  }, [messages, currentChatId, chatHistories]);
+  }, [messages, currentChatId, displayedMessages]);
 
   // Handle chat selection
   const handleSelectChat = useCallback((chatId: string) => {
@@ -133,9 +158,10 @@ export default function ChatPage() {
     if (selectedChat) {
       setCurrentChatId(chatId);
       setDisplayedMessages(selectedChat.messages);
-      resetMessages?.();
+      // Don't reset messages when selecting a chat, as it causes duplication
+      // resetMessages?.();
     }
-  }, [chatHistories, resetMessages]);
+  }, [chatHistories]);
 
   // Handle message submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,19 +178,13 @@ export default function ChatPage() {
     incrementDailyMessageCount();
     setMessageCount(prev => prev + 1);
     
-    // Add user message to displayed messages immediately
-    const userMessage: Message = {
-      role: 'user',
-      content: message,
-      timestamp: new Date().toISOString()
-    };
-    
-    setDisplayedMessages(prev => [...prev, userMessage]);
-    
     // Send message to agent and wait for response
     try {
+      // Clear displayed messages if this is a new chat
+      if (!currentChatId) {
+        setDisplayedMessages([]);
+      }
       await sendMessage(message);
-      // Agent's response will be added to messages through the useAgent hook
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -179,17 +199,23 @@ export default function ChatPage() {
   // Save chat histories to localStorage
   useEffect(() => {
     if (chatHistories.length > 0) {
-      localStorage.setItem('chatHistories', JSON.stringify(chatHistories));
+      const timeoutId = setTimeout(() => {
+        localStorage.setItem('chatHistories', JSON.stringify(chatHistories));
+      }, 0);
+      return () => clearTimeout(timeoutId);
     }
   }, [chatHistories]);
 
   // Save current chat ID
   useEffect(() => {
-    if (currentChatId) {
-      localStorage.setItem('currentChatId', currentChatId);
-    } else {
-      localStorage.removeItem('currentChatId');
-    }
+    const timeoutId = setTimeout(() => {
+      if (currentChatId) {
+        localStorage.setItem('currentChatId', currentChatId);
+      } else {
+        localStorage.removeItem('currentChatId');
+      }
+    }, 0);
+    return () => clearTimeout(timeoutId);
   }, [currentChatId]);
 
   // Modify scroll event handler
@@ -276,25 +302,39 @@ export default function ChatPage() {
       {/* Wallet Button */}
       <WalletButton />
 
-      {/* Chat Drawer */}
-      <ChatDrawer
-        chatHistories={chatHistories}
-        onSelectChat={handleSelectChat}
-        onDeleteChat={handleDeleteChat}
-        currentChatId={currentChatId}
-        isCollapsed={isDrawerCollapsed}
-        onToggleCollapse={() => setIsDrawerCollapsed(!isDrawerCollapsed)}
-      />
+      {/* Chat Drawer with New Chat Button */}
+      <div className="fixed top-0 left-0 h-full z-10">
+        <ChatDrawer
+          chatHistories={chatHistories}
+          onSelectChat={handleSelectChat}
+          onDeleteChat={handleDeleteChat}
+          currentChatId={currentChatId}
+          isCollapsed={isDrawerCollapsed}
+          onToggleCollapse={() => setIsDrawerCollapsed(!isDrawerCollapsed)}
+          onCreateNewChat={createNewChat}
+        />
+      </div>
 
-      {/* Content - adjusted margin and padding to account for drawer and wallet button */}
+      {/* Content - adjusted margin and padding */}
       <main 
         className={`flex flex-col h-screen relative transition-all duration-300 ease-in-out`} 
         style={{ 
           zIndex: 1,
           marginLeft: isDrawerCollapsed ? '4rem' : '20rem',
-          paddingTop: '5rem' // Add padding to prevent overlap with wallet button
+          paddingTop: '5rem'
         }}
       >
+        {/* Add New Chat Button */}
+        <div className="absolute top-4 right-4 z-20">
+          <button
+            onClick={createNewChat}
+            className="bg-gray-200 text-gray-700 rounded-lg px-4 py-2 shadow-[5px_5px_10px_#d1d9e6,-5px_-5px_10px_#ffffff] hover:shadow-[inset_2px_2px_5px_#d1d9e6,inset_-2px_-2px_5px_#ffffff] focus:outline-none transition-all duration-200 flex items-center space-x-2"
+          >
+            <ArrowPathIcon className="h-5 w-5" />
+            <span>New Chat</span>
+          </button>
+        </div>
+
         <div 
           ref={chatContainerRef}
           className="flex-1 overflow-y-auto px-4 space-y-6 py-4 max-w-4xl mx-auto w-full flex flex-col items-end"

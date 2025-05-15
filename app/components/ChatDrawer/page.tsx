@@ -23,6 +23,7 @@ interface ChatDrawerProps {
   currentChatId?: string;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  onCreateNewChat: () => void;
 }
 
 export default function ChatDrawer({
@@ -31,7 +32,8 @@ export default function ChatDrawer({
   onDeleteChat,
   currentChatId,
   isCollapsed,
-  onToggleCollapse
+  onToggleCollapse,
+  onCreateNewChat
 }: ChatDrawerProps) {
   return (
     <div
@@ -53,10 +55,18 @@ export default function ChatDrawer({
       {/* Drawer Content */}
       <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
           <h2 className={`text-lg font-semibold text-gray-700 transition-opacity duration-300 ${isCollapsed ? 'opacity-0' : 'opacity-100'}`}>
             Chat History
           </h2>
+          {!isCollapsed && (
+            <button
+              onClick={onCreateNewChat}
+              className="bg-gray-200 text-gray-700 rounded-lg px-3 py-1.5 text-sm shadow-[5px_5px_10px_#d1d9e6,-5px_-5px_10px_#ffffff] hover:shadow-[inset_2px_2px_5px_#d1d9e6,inset_-2px_-2px_5px_#ffffff] transition-all duration-200"
+            >
+              New Chat
+            </button>
+          )}
         </div>
 
         {/* Chat List */}
